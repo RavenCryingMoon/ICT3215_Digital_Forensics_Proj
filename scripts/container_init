@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+source ~/.bashrc
+
+git apply "/patches/v${VOL_VER}.patch" 2>/dev/null ||
+    git apply "/patches/${VOL_VER}.patch"
+
+upd
+
+/bin/bash -i
+
+exit 0
