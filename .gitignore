@@ -1,6 +1,9 @@
-.bash_history
-io/*/*
-!io/*/.gitkeep
-__pycache__
-.env/
-volatility3/
+*.lime
+*.raw
+*.mem
+symbols/
+out/
+__pycache__/
+*.pyc
+cart-venv/
+.venv/
