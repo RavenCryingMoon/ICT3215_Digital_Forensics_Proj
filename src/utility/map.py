@@ -110,6 +110,8 @@ class BpfMap:
         """
         if self.type == self.types.BPF_MAP_TYPE_ARRAY:
             return self._gen_array()
+        if self.type == self.types.BPF_MAP_TYPE_HASH:
+            return self._gen_hash()
 
         vollog.log(
             constants.LOGLEVEL_V,
@@ -159,3 +161,34 @@ class BpfMap:
                 self.vmlinux.layer_name, data_ptr, int(array.elem_size)
             )
             yield (i, data)
+
+    def _gen_hash(self) -> Iterable[tuple[int,bytes]]:
+        htab: ObjectInterface | None = LinuxUtilities.container_of(int(self.map.vol.offset), "bpf_htab", "map", self.vmlinux)
+        if not htab:
+            vollog.log(
+                constants.LOGLEVEL_V,
+                "Bug",
+            )
+            return []
+        htab_base = int(htab.buckets)
+        for i in range(int(htab.n_buckets)):
+            bucket_ptr = htab_base + (i * int(self.vmlinux.get_type("bucket").size))
+            b = self.vmlinux.object("bucket", offset=bucket_ptr, absolute=True)
+            data_dt = int(b.head.first)
+            if not (data_dt & 1):
+                elem = self.vmlinux.object("htab_elem", offset=data_dt, absolute=True)
+                while True:
+                    keyaddr = int(elem.key.vol.offset)
+                    key_size = self.map.key_size
+                    key_value_size = self.map.value_size
+                    key_bytes= self.context.layers.read(self.vmlinux.layer_name, keyaddr, key_size)
+                    value_bytes = self.context.layers.read(self.vmlinux.layer_name, keyaddr + ((key_size + 7) & ~7), key_value_size)
+                    yield (key_bytes,value_bytes)
+                    nxt = int(elem.hash_node.next)
+                    if nxt & 1:
+                        break
+                    elem = self.vmlinux.object("htab_elem", offset=nxt, absolute=True)
+                    
+                
+            
+
