@@ -10,6 +10,7 @@ from collections.abc import Iterable
 from enum import Enum
 from json import dumps
 
+from volatility3.framework import exceptions
 from volatility3.framework import constants
 from volatility3.framework.interfaces.context import (
     ContextInterface,
@@ -69,6 +70,7 @@ class BpfMap:
             self.btf: Btf | None = None
 
         self.type = self.types(self.map.map_type)
+        self.status = "traversed"
         self.vmlinux_btf: Btf | None = None
         self.btf_key_type_id: int = int(self.map.btf_key_type_id)
         self.btf_value_type_id: int = int(self.map.btf_value_type_id)
@@ -161,8 +163,9 @@ class BpfMap:
                 self.vmlinux.layer_name, data_ptr, int(array.elem_size)
             )
             yield (i, data)
-
+            
     def _gen_hash(self) -> Iterable[tuple[int,bytes]]:
+        self.status = "traversed"
         htab: ObjectInterface | None = LinuxUtilities.container_of(int(self.map.vol.offset), "bpf_htab", "map", self.vmlinux)
         if not htab:
             vollog.log(
@@ -171,6 +174,8 @@ class BpfMap:
             )
             return []
         htab_base = int(htab.buckets)
+        seen = set()
+        count = 0
         for i in range(int(htab.n_buckets)):
             bucket_ptr = htab_base + (i * int(self.vmlinux.get_type("bucket").size))
             b = self.vmlinux.object("bucket", offset=bucket_ptr, absolute=True)
@@ -179,11 +184,21 @@ class BpfMap:
                 elem = self.vmlinux.object("htab_elem", offset=data_dt, absolute=True)
                 while True:
                     keyaddr = int(elem.key.vol.offset)
+                    if (int(elem.vol.offset) in seen) or (count >= int(self.map.max_entries)):
+                        self.status = "partial"
+                        break
                     key_size = self.map.key_size
                     key_value_size = self.map.value_size
-                    key_bytes= self.context.layers.read(self.vmlinux.layer_name, keyaddr, key_size)
-                    value_bytes = self.context.layers.read(self.vmlinux.layer_name, keyaddr + ((key_size + 7) & ~7), key_value_size)
+                    try:
+                        key_bytes= self.context.layers.read(self.vmlinux.layer_name, keyaddr, key_size)
+                        value_bytes = self.context.layers.read(self.vmlinux.layer_name, keyaddr + ((key_size + 7) & ~7), key_value_size)
+                    except exceptions.InvalidAddressException:
+                        vollog.warning(f"map {self.label} is incomplete (partial recovery)")
+                        self.status = "partial"
+                        break
                     yield (key_bytes,value_bytes)
+                    seen.add(int(elem.vol.offset))
+                    count += 1
                     nxt = int(elem.hash_node.next)
                     if nxt & 1:
                         break
