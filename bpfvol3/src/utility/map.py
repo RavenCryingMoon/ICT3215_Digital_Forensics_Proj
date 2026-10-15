@@ -113,7 +113,7 @@ class BpfMap:
         """
         if self.type == self.types.BPF_MAP_TYPE_ARRAY:
             return self._gen_array()
-        if self.type == self.types.BPF_MAP_TYPE_HASH:
+        if self.type in (self.types.BPF_MAP_TYPE_HASH, self.types.BPF_MAP_TYPE_LRU_HASH):
             return self._gen_hash()
 
         vollog.log(
