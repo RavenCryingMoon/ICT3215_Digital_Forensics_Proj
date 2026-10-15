@@ -142,6 +142,7 @@ class MapList(PluginInterface):
             ("KEY SIZE", int),
             ("VALUE SIZE", int),
             ("MAX ENTRIES", int),
+            ("STATUS", str),
         ]
 
         filter_func: Callable[[BpfMap], bool] = self.create_filter(

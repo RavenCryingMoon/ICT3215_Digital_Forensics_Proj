@@ -70,7 +70,7 @@ class BpfMap:
             self.btf: Btf | None = None
 
         self.type = self.types(self.map.map_type)
-        self.status = "traversed"
+        self.status = "not dumped"
         self.vmlinux_btf: Btf | None = None
         self.btf_key_type_id: int = int(self.map.btf_key_type_id)
         self.btf_value_type_id: int = int(self.map.btf_value_type_id)
@@ -103,6 +103,7 @@ class BpfMap:
             int(self.map.key_size),
             int(self.map.value_size),
             int(self.map.max_entries),
+            self.status,
         )
 
     def items(self) -> Iterable[tuple[bytes | int, bytes]]:
@@ -119,6 +120,7 @@ class BpfMap:
             constants.LOGLEVEL_V,
             f"BPF map type not (yet) supported: {self.type}",
         )
+        self.status = "unsupported"
         return []
 
     def dump(self) -> str:
@@ -145,6 +147,7 @@ class BpfMap:
 
     def _gen_array(self) -> Iterable[tuple[int, bytes]]:
         """Interprets the map as an array and yields index-value pairs"""
+        self.status = "traversed"
         array: ObjectInterface | None = LinuxUtilities.container_of(
             int(self.map.vol.offset), "bpf_array", "map", self.vmlinux
         )
@@ -159,9 +162,14 @@ class BpfMap:
             data_ptr: int = int(array.value.vol.offset) + (
                 i & int(array.index_mask)
             ) * int(array.elem_size)
-            data: bytes = self.context.layers.read(
-                self.vmlinux.layer_name, data_ptr, int(array.elem_size)
-            )
+            try:
+                data: bytes = self.context.layers.read(
+                    self.vmlinux.layer_name, data_ptr, int(array.elem_size)
+                )
+            except exceptions.InvalidAddressException:
+                vollog.warning(f"map {self.label} is incomplete (partial recovery)")
+                self.status = "partial"
+                continue
             yield (i, data)
             
     def _gen_hash(self) -> Iterable[tuple[int,bytes]]:
