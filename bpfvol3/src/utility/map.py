@@ -115,6 +115,8 @@ class BpfMap:
             return self._gen_array()
         if self.type in (self.types.BPF_MAP_TYPE_HASH, self.types.BPF_MAP_TYPE_LRU_HASH):
             return self._gen_hash()
+        if self.type == self.types.BPF_MAP_TYPE_PERCPU_HASH:
+            return self._gen_hash(per_cpu=True)
 
         vollog.log(
             constants.LOGLEVEL_V,
@@ -172,7 +174,7 @@ class BpfMap:
                 continue
             yield (i, data)
             
-    def _gen_hash(self) -> Iterable[tuple[int,bytes]]:
+    def _gen_hash(self, per_cpu=False) -> Iterable[tuple[int,bytes]]:
         self.status = "traversed"
         htab: ObjectInterface | None = LinuxUtilities.container_of(int(self.map.vol.offset), "bpf_htab", "map", self.vmlinux)
         if not htab:
@@ -184,6 +186,9 @@ class BpfMap:
         htab_base = int(htab.buckets)
         seen = set()
         count = 0
+        if per_cpu == True:
+            nr_cpus = int(self.vmlinux.object_from_symbol(symbol_name="nr_cpu_ids"))
+            pco = self.vmlinux.object_from_symbol(symbol_name="__per_cpu_offset")
         for i in range(int(htab.n_buckets)):
             bucket_ptr = htab_base + (i * int(self.vmlinux.get_type("bucket").size))
             b = self.vmlinux.object("bucket", offset=bucket_ptr, absolute=True)
@@ -199,7 +204,16 @@ class BpfMap:
                     key_value_size = self.map.value_size
                     try:
                         key_bytes= self.context.layers.read(self.vmlinux.layer_name, keyaddr, key_size)
-                        value_bytes = self.context.layers.read(self.vmlinux.layer_name, keyaddr + ((key_size + 7) & ~7), key_value_size)
+                        valueaddr = keyaddr + ((key_size + 7) & ~7)
+                        if per_cpu == True:
+                            cpu_ptr = int.from_bytes(self.context.layers.read(self.vmlinux.layer_name, valueaddr, 8), "little")
+                            cpu_dict = {}
+                            for cpu in range(nr_cpus):
+                                cpu_value = self.context.layers.read(self.vmlinux.layer_name, cpu_ptr + int(pco[cpu]), key_value_size)
+                                cpu_dict.update({cpu:cpu_value})
+                            value_bytes = cpu_dict
+                        else:
+                            value_bytes = self.context.layers.read(self.vmlinux.layer_name, valueaddr, key_value_size)
                     except exceptions.InvalidAddressException:
                         vollog.warning(f"map {self.label} is incomplete (partial recovery)")
                         self.status = "partial"
