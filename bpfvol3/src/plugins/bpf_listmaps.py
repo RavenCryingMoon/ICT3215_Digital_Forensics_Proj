@@ -8,6 +8,10 @@ typically accessed via bpftool map (list|dump) subcommands
 from collections.abc import Callable, Iterable
 from typing import TYPE_CHECKING, ClassVar, Optional
 
+from volatility3.framework import exceptions
+from volatility3.framework.objects.utility import array_of_pointers
+from volatility3.utility.helpers import make_vol_type
+
 from volatility3.framework.configuration import requirements
 from volatility3.framework.interfaces.configuration import RequirementInterface
 from volatility3.framework.interfaces.context import (
@@ -76,7 +80,7 @@ class MapList(PluginInterface):
                 ) as f:
                     f.write(m.dump().encode("UTF-8"))
 
-            yield (0, m.row())
+            yield (0, (*m.row(), getattr(m, "source", "idr")))
 
     @classmethod
     def list_maps(
@@ -85,29 +89,56 @@ class MapList(PluginInterface):
         vmlinux_module_name: str = "kernel",
         filter_func: Callable[[BpfMap], bool] = lambda _: False,
     ) -> Iterable[BpfMap]:
-        """Lists all the BPF maps in the primary layer
-        Args:
-            context: The context to retrieve required elements
-                (layers, symbol tables) from
-            vmlinux_module_name: The name of the kernel module on which
-                to operate
-            filter_func: A function which takes a BPF map object and
-                returns True if the map should be ignored/filtered
-        Yields:
-            BPF map objects
-        """
+        """Lists BPF maps found through multiple roots: the map registry
+        (map_idr) and the maps referenced by loaded programs (used_maps).
+        Maps are de-duplicated by address, and each gets a `source` marker
+        (idr, prog, or idr+prog) showing how it was reached."""
         vmlinux: ModuleInterface = context.modules[vmlinux_module_name]
+
+        seen: dict[int, BpfMap] = {}   # map offset -> BpfMap (with .source set)
+
+        # Source A: the map registry.
         map_idr: ObjectInterface = vmlinux.object_from_symbol(
             symbol_name="map_idr"
         )
+        for m in XArray(map_idr.idr_rt, "bpf_map", context).xa_for_each():
+            bm: BpfMap = BpfMap(m, context)
+            seen[int(bm.map.vol.offset)] = bm
+            bm.source = "idr"
 
-        xarray: XArray = XArray(map_idr.idr_rt, "bpf_map", context)
-
-        for m in xarray.xa_for_each():
-            m: BpfMap = BpfMap(m, context)  # noqa: PLW2901
-            if filter_func(m):
+        # Source B: maps referenced by loaded programs (prog_idr -> used_maps).
+        prog_idr: ObjectInterface = vmlinux.object_from_symbol(
+            symbol_name="prog_idr"
+        )
+        for prog in XArray(prog_idr.idr_rt, "bpf_prog", context).xa_for_each():
+            try:
+                aux = prog.aux
+                n = int(aux.used_map_cnt)
+                if n <= 0:
+                    continue
+                map_ptrs = array_of_pointers(
+                    aux.used_maps.dereference(),
+                    n,
+                    make_vol_type("bpf_map", context),
+                    context,
+                )
+                for mp in map_ptrs:
+                    bm = BpfMap(mp, context)
+                    off = int(bm.map.vol.offset)
+                    if off in seen:
+                        if seen[off].source == "idr":
+                            seen[off].source = "idr+prog"
+                    else:
+                        bm.source = "prog"
+                        seen[off] = bm
+            except exceptions.InvalidAddressException:
                 continue
-            yield m
+
+        # Yield unique maps, applying the caller's filter.
+        for bm in seen.values():
+            if filter_func(bm):
+                continue
+            yield bm
 
     @classmethod
     def create_filter(
@@ -143,6 +174,7 @@ class MapList(PluginInterface):
             ("VALUE SIZE", int),
             ("MAX ENTRIES", int),
             ("STATUS", str),
+            ("SOURCE", str),
         ]
 
         filter_func: Callable[[BpfMap], bool] = self.create_filter(
