@@ -56,21 +56,29 @@ class MapList(PluginInterface):
                 optional=True,
                 default=False,
             ),
+            requirements.BooleanRequirement(
+                name="raw",
+                description="If set, dump raw bytes instead of BTF-decoded "
+                "values (for verification against ground truth).",
+                optional=True,
+                default=False,
+            ),
         ]
 
     def _generator(
         self,
         filter_func: Callable[[BpfMap], bool] = lambda _: False,
         dump: bool = False,
+        raw: bool = False,
     ) -> Iterable[tuple[int, tuple]]:
         """Generates the BPF map list
-        Args:
-            filter_func: A function which takes a BPF map object and
-                returns True if the map should be ignored/filtered
-            dump: If True, full map contents are written to a file
-        Yields:
-            Each row
-        """
+                Args:
+                    filter_func: A function which takes a BPF map object and
+                        returns True if the map should be ignored/filtered
+                    dump: If True, full map contents are written to a file
+                Yields:
+                    Each row
+                """
         for m in self.list_maps(
             self.context, self.config["kernel"], filter_func
         ):
@@ -78,8 +86,7 @@ class MapList(PluginInterface):
                 with self.open(
                     f"map_{hex(m.map.vol.get('offset'))}_{m.map.id}"
                 ) as f:
-                    f.write(m.dump().encode("UTF-8"))
-
+                    f.write(m.dump(raw=raw).encode("UTF-8"))
             yield (0, (*m.row(), getattr(m, "source", "idr")))
 
     @classmethod
@@ -181,8 +188,9 @@ class MapList(PluginInterface):
             self.config.get("id", None)
         )
         dump: bool = bool(self.config.get("dump"))
+        raw: bool = bool(self.config.get("raw"))
 
         return TreeGrid(
             columns,
-            self._generator(filter_func, dump),
+            self._generator(filter_func, dump, raw),
         )

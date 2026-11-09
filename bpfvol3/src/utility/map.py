@@ -125,18 +125,18 @@ class BpfMap:
         self.status = "unsupported"
         return []
 
-    def dump(self) -> str:
-        """Dump the map's content as a string"""
+    def dump(self, raw: bool = False) -> str:
+        """Dump the map's content as a string. If raw, skip BTF decoding."""
         ret: dict[str, str] = {}
         for k, v in self.items():
-            if self.btf_key_type_id and self.btf:
+            if not raw and self.btf_key_type_id and self.btf:
                 k_repr: str = self.btf.sprintf_bytes(k, self.btf_key_type_id)
             else:
                 k_repr: str = str(k)
 
-            if self.btf_value_type_id and self.btf:
+            if not raw and self.btf_value_type_id and self.btf:
                 v_repr: str = self.btf.sprintf_bytes(v, self.btf_value_type_id)
-            elif self.btf_vmlinux_value_type_id and self.vmlinux_btf:
+            elif not raw and self.btf_vmlinux_value_type_id and self.vmlinux_btf:
                 v_repr: str = self.vmlinux_btf.sprintf_bytes(
                     v, self.btf_vmlinux_value_type_id
                 )
