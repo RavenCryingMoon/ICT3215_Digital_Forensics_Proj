@@ -150,6 +150,29 @@ class Btf:
                     s += "true" if val else "false"
                 else:
                     s += str(val)
+        elif kind in (BtfKind.BTF_KIND_ENUM, BtfKind.BTF_KIND_ENUM64):
+            # An enum stores a number; BTF lists the (name, value) pairs that
+            # follow the header. Show the matching name, or the number if none.
+            size = int(btf_type.size)
+            val = b if isinstance(b, int) else int.from_bytes(b[:size], "little")
+            start = btf_type.vol.offset + btf_type.vol.size
+            name = None
+            if kind == BtfKind.BTF_KIND_ENUM:
+                esz = get_vol_template("btf_enum", self.context).vol.size
+                for i in range(vlen):
+                    e = get_object("btf_enum", start + i * esz, self.context)
+                    if (int(e.val) & 0xFFFFFFFF) == (val & 0xFFFFFFFF):
+                        name = self._get_string(e.name_off)
+                        break
+            else:  # ENUM64: value is split across two 32-bit halves
+                esz = get_vol_template("btf_enum64", self.context).vol.size
+                for i in range(vlen):
+                    e = get_object("btf_enum64", start + i * esz, self.context)
+                    ev = (int(e.val_hi32) << 32) | (int(e.val_lo32) & 0xFFFFFFFF)
+                    if ev == val:
+                        name = self._get_string(e.name_off)
+                        break
+            s += name if name is not None else str(val)
         else:
             vollog.log(
                 constants.LOGLEVEL_V,
@@ -231,22 +254,6 @@ class Btf:
         for i in range(vlen):
             obj = get_object(elem_type, start + elem_sz * i, self.context)
             yield obj
-            
-    def _skip_modifiers(self, type_id):
-        """Follow typedef/const/volatile/restrict/type_tag to the real type.
-        Returns (resolved_type_id, its btf_type object)."""
-        bt = self._type_by_id(type_id)
-        while True:
-            _, kind, _ = self._parse_info(int(bt.info))
-            if kind in (
-                BtfKind.BTF_KIND_TYPEDEF, BtfKind.BTF_KIND_CONST,
-                BtfKind.BTF_KIND_VOLATILE, BtfKind.BTF_KIND_RESTRICT,
-                BtfKind.BTF_KIND_TYPE_TAG,
-            ):
-                type_id = int(bt.type)
-                bt = self._type_by_id(type_id)
-            else:
-                return type_id, bt
 
     def _type_size(self, type_id):
         """Size in bytes of a type (after resolving typedefs/modifiers)."""

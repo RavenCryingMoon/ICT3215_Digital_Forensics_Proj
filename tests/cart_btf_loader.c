@@ -14,15 +14,15 @@
 #include <unistd.h>
 #include <stdint.h>
 
-// Must match struct cart_evt in cart_btf.bpf.c exactly (same order, same types).
+// Must match struct cart_evt in cart_btf.bpf.c exactly. The enum field is an
+// int, so it is a uint32_t here.
 struct cart_evt {
     uint32_t pid;
     char     comm[16];
     uint64_t count;
+    uint32_t kind;   // enum evt_kind: 0 NONE, 1 LOGIN, 2 EXEC, 3 HIDE
 };
 
-// Print a byte buffer as lowercase hex, in memory order (matches how the
-// planter and verify.py treat keys and values).
 static void print_hex(const void *p, size_t n)
 {
     const unsigned char *b = (const unsigned char *)p;
@@ -30,7 +30,6 @@ static void print_hex(const void *p, size_t n)
         printf("%02x", b[i]);
 }
 
-// One planted entry: print the TRUTH line, then insert it into the map.
 static void plant(int fd, uint32_t id, uint32_t key, const struct cart_evt *val)
 {
     printf("TRUTH map=cart_btf id=%u key=", id);
@@ -52,30 +51,29 @@ int main(void)
     if (!map) { fprintf(stderr, "map not found\n"); return 1; }
     int fd = bpf_map__fd(map);
 
-    // Look up the map's kernel id so the TRUTH lines carry it (verify.py keys on id).
     struct bpf_map_info info;
     uint32_t len = sizeof(info);
     memset(&info, 0, sizeof(info));
     if (bpf_obj_get_info_by_fd(fd, &info, &len) != 0) { perror("get_info"); return 1; }
     uint32_t id = info.id;
 
-    // Two known entries. memset first so the padding byte(s) are deterministic
-    // zeros — otherwise the recovered value bytes wouldn't match ground truth.
+    // memset first so the padding bytes are deterministic zeros.
     struct cart_evt v;
 
     memset(&v, 0, sizeof(v));
-    v.pid = 1337; strncpy(v.comm, "cartographer", sizeof(v.comm) - 1); v.count = 42;
+    v.pid = 1337; strncpy(v.comm, "cartographer", sizeof(v.comm) - 1);
+    v.count = 42; v.kind = 2;   // EVT_EXEC
     plant(fd, id, 1337, &v);
 
     memset(&v, 0, sizeof(v));
-    v.pid = 4242; strncpy(v.comm, "evil", sizeof(v.comm) - 1); v.count = 7;
+    v.pid = 4242; strncpy(v.comm, "evil", sizeof(v.comm) - 1);
+    v.count = 7; v.kind = 3;    // EVT_HIDE
     plant(fd, id, 4242, &v);
 
     printf("PLANTED-OK\n");
     fflush(stdout);
 
-    // Hold the object (and therefore the map) alive in the kernel until Ctrl+C.
-    pause();
+    pause();   // hold the object (and its map) alive until Ctrl+C
 
     bpf_object__close(obj);
     return 0;

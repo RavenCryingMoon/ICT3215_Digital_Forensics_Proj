@@ -173,3 +173,30 @@ This matches `tests/truth/cart_hash.truth.json`. The doubled backslashes are JSO
 └── cartographer/    this repository
 ~/cart-venv/         Python virtual environment
 ```
+## Project files
+
+Plugins and utilities this project adds or changes, in the Volatility tree:
+
+| File | Role |
+|---|---|
+| volatility3/utility/map.py | map recovery (hash family, per-CPU, LRU) + status |
+| volatility3/utility/btf.py | BTF decoder (ints, typedefs, structs, arrays, enums) |
+| volatility3/framework/plugins/linux/bpf_listmaps.py | map plugin: STATUS, multi-root SOURCE, --raw |
+| volatility3/framework/plugins/linux/bpf_scanmaps.py | orphaned-map scanner (opt-in) |
+| volatility3/framework/plugins/linux/unlink_map.py | test fixture: unlink a map in an image copy |
+| volatility3/framework/plugins/linux/find_next.py | test fixture: corrupt a hash chain in an image copy |
+
+Planters and harness (run directly, not in the Volatility tree):
+
+| File | Role |
+|---|---|
+| cart_btf.bpf.c / cart_btf_loader.c | BTF-typed hash map fixture (struct value incl. an enum) |
+| hide.bpf.c / hide_loader.c | rootkit-style hide-list fixture |
+| plant_maps.c | multi-type planter (array/hash/LRU/per-CPU) |
+| verify.py | compares recovered bytes against planter ground truth (use --raw dumps) |
+
+## Kernel
+
+Recorded kernel for the validated profile: 6.12.38+kali-amd64.
+Support is validated for this one kernel build; a different kernel needs its own
+matching symbol profile.
