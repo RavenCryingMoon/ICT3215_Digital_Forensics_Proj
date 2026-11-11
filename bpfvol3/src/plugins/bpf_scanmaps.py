@@ -46,7 +46,7 @@ class ScanMaps(plugins.PluginInterface):
     maps even when unlinked from map_idr and used by no program."""
 
     _required_framework_version = (2, 0, 0)
-    _version = (0, 0, 6)
+    _version = (0, 0, 7)
 
     OPS_SYMBOLS = (
         "htab_map_ops",
@@ -159,7 +159,7 @@ class ScanMaps(plugins.PluginInterface):
         except Exception:
             try:
                 text = bm.dump(raw=True)
-                vollog.warning(
+                vollog.debug(
                     f"[scanmaps] map {bm.label}: BTF unreadable, dumped raw bytes"
                 )
             except Exception:
@@ -193,7 +193,7 @@ class ScanMaps(plugins.PluginInterface):
                 needles[struct.pack("<Q", form)] = sym
 
         resolved = {needles[k]: hex(struct.unpack("<Q", k)[0]) for k in needles}
-        vollog.warning(f"[scanmaps] ops_off={ops_off} needles={len(needles)} {resolved}")
+        vollog.debug(f"[scanmaps] ops_off={ops_off} needles={len(needles)} {resolved}")
         if not needles:
             vollog.warning("[scanmaps] no ops symbols resolved; nothing to scan")
             return
@@ -219,7 +219,7 @@ class ScanMaps(plugins.PluginInterface):
             except Exception:
                 continue
             found.append((map_virt, bm))
-        vollog.warning(f"[scanmaps] raw hits={hits}, validated maps={len(found)}")
+        vollog.debug(f"[scanmaps] raw hits={hits}, validated maps={len(found)}")
 
         # Pass 2: compare against the registry, count repeats, then label.
         reg_addrs, reg_keys = self._registry(vmlinux)

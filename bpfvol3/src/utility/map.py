@@ -170,9 +170,10 @@ class BpfMap:
                     self.vmlinux.layer_name, data_ptr, int(array.elem_size)
                 )
             except exceptions.InvalidAddressException:
-                vollog.warning(f"map {self.label} is incomplete (partial recovery)")
-                self.status = "partial"
-                continue
+                    if self.status != "partial":
+                        vollog.warning(f"map {self.label} is incomplete (partial recovery)")
+                        self.status = "partial"
+                    continue
             yield (i, data)
             
     def _gen_hash(self, per_cpu=False) -> Iterable[tuple[int,bytes]]:
@@ -216,8 +217,9 @@ class BpfMap:
                         else:
                             value_bytes = self.context.layers.read(self.vmlinux.layer_name, valueaddr, key_value_size)
                     except exceptions.InvalidAddressException:
-                        vollog.warning(f"map {self.label} is incomplete (partial recovery)")
-                        self.status = "partial"
+                        if self.status != "partial":
+                            vollog.warning(f"map {self.label} is incomplete (partial recovery)")
+                            self.status = "partial"
                         break
                     yield (key_bytes,value_bytes)
                     seen.add(int(elem.vol.offset))
