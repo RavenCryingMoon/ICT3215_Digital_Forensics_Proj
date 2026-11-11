@@ -275,3 +275,19 @@ class Btf:
             "unsigned int", bt.vol.offset + bt.vol.size, self.context))
         encoding = (info_word >> 24) & 0x0F
         return bool(encoding & 2)   # BTF_INT_CHAR
+
+    def _skip_modifiers(self, type_id):
+        """Follow typedef/const/volatile/restrict/type_tag to the real type.
+        Returns (resolved_type_id, its btf_type object)."""
+        bt = self._type_by_id(type_id)
+        for _ in range(32):  # real chains are a few hops; corrupted BTF can loop
+            _, kind, _ = self._parse_info(int(bt.info))
+            if kind not in (
+                BtfKind.BTF_KIND_TYPEDEF, BtfKind.BTF_KIND_CONST,
+                BtfKind.BTF_KIND_VOLATILE, BtfKind.BTF_KIND_RESTRICT,
+                BtfKind.BTF_KIND_TYPE_TAG,
+            ):
+                return type_id, bt
+            type_id = int(bt.type)
+            bt = self._type_by_id(type_id)
+        raise BtfError("modifier chain too long; BTF looks corrupted")

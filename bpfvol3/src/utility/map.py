@@ -115,7 +115,8 @@ class BpfMap:
             return self._gen_array()
         if self.type in (self.types.BPF_MAP_TYPE_HASH, self.types.BPF_MAP_TYPE_LRU_HASH):
             return self._gen_hash()
-        if self.type == self.types.BPF_MAP_TYPE_PERCPU_HASH:
+        if self.type in (self.types.BPF_MAP_TYPE_PERCPU_HASH,
+                   self.types.BPF_MAP_TYPE_LRU_PERCPU_HASH):
             return self._gen_hash(per_cpu=True)
 
         vollog.log(

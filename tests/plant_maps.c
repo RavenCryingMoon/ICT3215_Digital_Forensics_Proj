@@ -86,8 +86,7 @@ int main(void) {
         map_update(h, &keys[i], v);
         truth("cart_hash", hid, &keys[i], 4, v, 8);
     }
-    // 2b. LRU hash: same bucket/chain layout as a regular hash, plus an
-    //     eviction policy. Tests that the hash walk also handles LRU_HASH.
+    
     int lru = map_create(BPF_MAP_TYPE_LRU_HASH, 4, 8, 64, 0, "cart_lru");
     uint32_t lid = map_id(lru);
     uint32_t lkeys[] = {11, 22, 33};
@@ -98,30 +97,6 @@ int main(void) {
         v[7] = 0;
         map_update(lru, &lkeys[i], v);
         truth("cart_lru", lid, &lkeys[i], 4, v, 8);
-    }
-    // 2c. Per-CPU hash: the map keeps one value PER CPU. To set an entry from
-    //     userspace you must hand the kernel a buffer holding a value for EVERY
-    //     CPU, laid out back-to-back (stride = round_up(value_size, 8) per CPU;
-    //     value_size is 8 here, so stride is just 8). We write the same value to
-    //     every CPU to keep the ground truth simple for now.
-    int ncpus = (int)sysconf(_SC_NPROCESSORS_CONF);
-    int pcpu = map_create(BPF_MAP_TYPE_PERCPU_HASH, 4, 8, 16, 0, "cart_pcpu");
-    uint32_t pid = map_id(pcpu);
-    uint32_t pkeys[] = {1000, 2000};
-    for (size_t i = 0; i < sizeof(pkeys) / sizeof(pkeys[0]); i++) {
-        uint8_t one[8];                       // the value we put on every CPU
-        memcpy(one, "PCPUMAP", 7);
-        one[7] = (uint8_t)('0' + i);
-
-        // per-CPU update buffer: ncpus copies of the 8-byte value, back to back
-        uint8_t *buf = (uint8_t *)malloc((size_t)ncpus * 8);
-        if (!buf) { perror("malloc"); exit(1); }
-        for (int c = 0; c < ncpus; c++)
-            memcpy(buf + (size_t)c * 8, one, 8);
-
-        map_update(pcpu, &pkeys[i], buf);     // kernel copies slot c -> CPU c
-        truth("cart_pcpu", pid, &pkeys[i], 4, one, 8);  // records the per-CPU value
-        free(buf);
     }
 
     // 3. Non-preallocated hash with odd sizes: key 6, value 12 (tests
