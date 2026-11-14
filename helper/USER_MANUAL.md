@@ -32,17 +32,19 @@ the kernel of the image being analysed. The exact revisions and the profile
 build are recorded in `ENVIRONMENT.md`. Support is validated against one
 documented kernel build; a different kernel needs its own matching profile.
 
-The five files this project adds or changes live in the Volatility tree as
+The six files this project adds or changes live in the Volatility tree as
 follows:
 
     volatility3/utility/map.py                           map recovery + status
     volatility3/utility/btf.py                           BTF decoder
     volatility3/framework/plugins/linux/bpf_listmaps.py  the map plugin
-    volatility3/framework/plugins/linux/unlink_map.py    test fixture (plugin)
     volatility3/framework/plugins/linux/bpf_scanmaps.py  orphaned-map scanner
+    volatility3/framework/plugins/linux/unlink_map.py    test fixture (plugin)
+    volatility3/framework/plugins/linux/find_next.py     test fixture (plugin)
 
-The planters and the verification harness (`cart_btf_loader.c`, `hide_loader.c`,
-`plant_maps.c`, `verify.py`, and so on) are run directly and do not go in the
+The planters, the verification harness and the evaluation script
+(`plant_maps.c`, `plant_lru_pcpu.c`, `cart_btf_loader.c`, `hide_loader.c`,
+`verify.py`, `collect_evidence.sh`) are run directly and do not go in the
 Volatility tree.
 
 
@@ -82,7 +84,8 @@ described in section 6.
 
 The scanner finds maps by searching memory for the fixed pointer every map of a
 given type carries to the kernel's shared operations table. It therefore finds a
-map even when the registry no longer lists it and no program references it. It is
+map even when the registry no longer lists it and no program references it. It
+covers the hash family (plain, LRU, per-CPU and LRU per-CPU) and array maps. It is
 an optional, opt-in plugin and does not run as part of normal listing.
 
     vol.py -s <symbols> -f <image> -o <outdir> linux.bpf_scanmaps.ScanMaps [--dump]
@@ -151,11 +154,12 @@ How each find relates to the registry:
 
 Recovered and decoded: `ARRAY` (from the baseline), `HASH`, `LRU_HASH`,
 `PERCPU_HASH`, and `LRU_PERCPU_HASH`. BTF decoding handles integers, typedefs and
-type qualifiers, structures and unions, and arrays (character and byte arrays as
-text or capped hex, other arrays as a capped list).
+type qualifiers, structures and unions, arrays (character and byte arrays as
+text or capped hex, other arrays as a capped list), and enumerations (shown by
+name, for example `EVT_HIDE`).
 
 Not supported: `HASH_OF_MAPS` (stores pointers to other maps, not values) and
-map types outside the hash family. Enum fields are shown as their numeric value.
+map types outside the hash family and arrays.
 
 
 ## 8. Verifying recovery
@@ -170,6 +174,13 @@ by a planter while it ran.
 records. It prints a per-map pass/fail table and exits non-zero if any planted
 map was not fully recovered.
 
+To reproduce the whole evaluation in the report in one go, run the four
+planters, capture one image while they run, then run `collect_evidence.sh` from
+the Volatility folder. The steps are at the top of the script. It runs the
+listing, byte checks, corruption test, unlink test and scanner on that image,
+and writes every result, with run times and peak memory, to `evidence/`, starting
+with `evidence/SUMMARY.txt`.
+
 
 ## 9. Test fixtures
 
@@ -180,8 +191,10 @@ of an image or on output files and are not part of the recovery tool.
   image, modelling a map unlinked from the registry while still in memory.
 - `find_next.FindNext` — corrupts a hash chain pointer in a copy of an image,
   modelling damaged memory, so the status layer can be shown reporting `partial`.
-- `cart_btf`, `hide`, and `plant_maps` — loaders that create maps with known
-  contents and record ground truth.
+- `plant_maps`, `plant_lru_pcpu`, `cart_btf` and `hide` — loaders that create
+  maps with known contents and record ground truth. Together they plant nine
+  maps: array, hash, hash without preallocation, an empty hash, LRU, per-CPU,
+  LRU per-CPU, and two BTF-typed hash maps (one used by a program).
 
 
 ## 10. Limitations
