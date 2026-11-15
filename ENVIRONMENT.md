@@ -122,25 +122,24 @@ grep -q 'btf|symdb' volatility3/schemas/schema-6.2.0.json || \
 
 ### Installing Cartographer's files
 
-Cartographer's files are copied from this repository into the Volatility tree. Set `REPO` to wherever this repository is cloned on the test machine:
+The repository is kept on a separate host machine; the Kali test machine holds no clone of it. Files are copied from the repository into the Kali machine as follows:
+
+| From the repository | To the Kali machine |
+|---|---|
+| `bpfvol3/src/utility/map.py`, `btf.py` | `~/DF_proj/vol3-pinned/volatility3/utility/` |
+| `bpfvol3/src/plugins/bpf_listmaps.py`, `bpf_scanmaps.py` | `~/DF_proj/vol3-pinned/volatility3/framework/plugins/linux/` |
+| `tests/plugins/*.py` (evaluation only) | `~/DF_proj/vol3-pinned/volatility3/framework/plugins/linux/` |
+| `tests/fixtures/*` (loaders) | `~/DF_proj/` |
+| `tests/collect_evidence.sh`, `tests/collect_collide.sh` | `~/DF_proj/` |
+| `tests/verify.py` | `~/DF_proj/tests/` |
+
+After copying a changed Python file, clear Volatility's cache, or Python keeps running the old version:
 
 ```
-REPO=~/DF_proj/ICT3215_Digital_Forensics_Proj
-V=~/DF_proj/vol3-pinned/volatility3
-
-# the tool
-cp $REPO/bpfvol3/src/utility/map.py $REPO/bpfvol3/src/utility/btf.py $V/utility/
-cp $REPO/bpfvol3/src/plugins/bpf_listmaps.py $REPO/bpfvol3/src/plugins/bpf_scanmaps.py $V/framework/plugins/linux/
-
-# test plugins, needed only to reproduce the evaluation
-cp $REPO/tests/plugins/*.py $V/framework/plugins/linux/
-
 find ~/DF_proj/vol3-pinned -name __pycache__ -type d -prune -exec rm -rf {} +
 ```
 
-Copy again after any change in the repository. Clearing `__pycache__` matters: Python otherwise keeps running the old version of a changed file.
-
-Copies are used instead of symbolic links. A link only works when the repository is cloned on the same machine at the exact path the link names; when it is not, Volatility silently fails to load the plugin (`invalid choice linux.bpf_listmaps.MapList`).
+Copies are used instead of symbolic links. A link only works when the repository is on the same machine at the exact path the link names; when it is not, Volatility silently fails to load the plugin (`invalid choice linux.bpf_listmaps.MapList`).
 
 ## 6. Running the plugins
 
@@ -165,8 +164,8 @@ With the images, truth files and plugins in place (sections 3 and 5), run from `
 
 | Experiment | Command | Output |
 |---|---|---|
-| Main evaluation | `bash $REPO/tests/collect_evidence.sh` | `~/DF_proj/evidence/` |
-| Hash collisions | `bash $REPO/tests/collect_collide.sh` | `~/DF_proj/evidence_collide/` |
+| Main evaluation | `bash ~/DF_proj/collect_evidence.sh` | `~/DF_proj/evidence/` |
+| Hash collisions | `bash ~/DF_proj/collect_collide.sh` | `~/DF_proj/evidence_collide/` |
 | Borrowed BTF | `~/cart-venv/bin/python vol.py -q -s ../symbols -f ../final.lime -o ../evidence_borrow/scan linux.bpf_scanmaps.ScanMaps --dump --borrow-btf` | `~/DF_proj/evidence_borrow/` |
 
 The scripts expect the loaders' truth files in `~/DF_proj` and the images at `~/DF_proj/final.lime` and `~/DF_proj/collide.lime`; the paths are set at the top of each script. The main run takes about 4 minutes on the test machine (the scanner reads the whole image in about 97 s with a peak memory of 3.5 GB; each listing takes 11–14 s and about 500 MB). It makes one temporary copy of the image at a time, so it needs free disk space of about one image size.
@@ -212,6 +211,9 @@ The `cart_*` maps and `hide_rules` are the planted test maps. `read_mem_array_` 
 ├── final.lime          main memory image (not in the repository)
 ├── collide.lime        collision-test image (not in the repository)
 ├── truth_*.txt         ground truth printed by the loaders
+├── *.c, *.bpf.c        loaders copied from tests/fixtures/, built in place
+├── collect_*.sh        evaluation scripts copied from tests/
+├── tests/verify.py     byte-check harness copied from tests/
 ├── btf.raw             BTF captured from /sys/kernel/btf/vmlinux
 ├── kallsyms.map        captured /proc/kallsyms
 ├── symbols/            generated profile kali-6.12.38.json
@@ -220,7 +222,8 @@ The `cart_*` maps and `hide_rules` are the planted test maps. `read_mem_array_` 
 ├── lemon/              LEMON v2.0 build
 ├── evidence/           output of collect_evidence.sh
 ├── evidence_collide/   output of collect_collide.sh
-├── evidence_borrow/    output of the borrowed-BTF run
-└── ICT3215_Digital_Forensics_Proj/   this repository
+└── evidence_borrow/    output of the borrowed-BTF run
 ~/cart-venv/            Python virtual environment
 ```
+
+The repository itself lives on a separate host machine; the `evidence/` folder in the repository is a copy of the three output folders above.
