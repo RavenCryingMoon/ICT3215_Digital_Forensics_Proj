@@ -1,0 +1,119 @@
+CARTOGRAPHER EVIDENCE — 2026-11-14T17:11:08-05:00
+
+date:            2026-11-14T17:05:59-05:00
+kernel:          6.12.38+kali-amd64
+possible CPUs:   0-31   <- check against the 128 per-CPU slots
+nproc --all:     32
+volatility3 git: 18e5d7a7f2e2a85d0178307dd502e2729488e93a
+BPFVol3 git:     4123d3f74cbe407876eca5cb78500fd0046a435a
+python:          Python 3.13.7
+image:           /home/kali/DF_proj/final.lime (8.0G)
+image sha256:    5731bdfe58cd66b9cb1a1483e10197bf8701f7c7c3d6982e4a946a3d6f151c7a
+
+### Table I — byte check per truth file (original image)
+  ID  NAME             EXPECTED MATCHED  RESULT
+  57  cart_btf                2       2  PASS
+
+ALL PLANTED MAPS RECOVERED
+  ID  NAME             EXPECTED MATCHED  RESULT
+  58  hide_rules              2       2  PASS
+
+ALL PLANTED MAPS RECOVERED
+  ID  NAME             EXPECTED MATCHED  RESULT
+  63  cart_lru_pcpu           3       3  PASS
+
+ALL PLANTED MAPS RECOVERED
+  ID  NAME             EXPECTED MATCHED  RESULT
+  51  cart_arr                1       1  PASS
+  52  cart_hash              10      10  PASS
+  53  cart_lru                3       3  PASS
+  54  cart_pcpu               2       2  PASS
+  55  cart_hash_np            2       2  PASS
+  56  cart_empty        (empty)       -  PASS
+
+ALL PLANTED MAPS RECOVERED
+
+### hide_rules byte check after unlinking from map_idr
+  ID  NAME             EXPECTED MATCHED  RESULT
+  58  hide_rules              2       2  PASS
+
+ALL PLANTED MAPS RECOVERED
+
+### Fig. 4 — STATUS of cart_hash_np: before / after corruption
+0x9faa81189000	55	HASH	cart_hash_np	6	12	8	traversed	idr
+0x9faa81189000	55	HASH	cart_hash_np	6	12	8	partial	idr
+
+### Fig. 5 / 6 — hide_rules and cart_btf after unlinking (cart_btf should be absent)
+0x9faa442a0400	58	HASH	hide_rules	4	36	16	traversed	prog
+cart_btf: absent from the list (expected)
+
+### Table II — scanner results
+Volatility 3 Framework 2.5.2
+
+OFFSET (V)	ID	TYPE	NAME	KEY SIZE	VALUE SIZE	MAX ENTRIES	STATUS	SCAN
+
+0x9fa98598b4f8	40	ARRAY	mem_ebp.kconfig	4	9	1	traversed	ORPHANED x3 (dead)
+0x9fa9a4b83bc0	0	HASH		4	4	128	traversed	freed
+0x9fa9af7cb100	0	HASH	cart_btf	4	40	16	partial	freed
+0x9fa9bf8e59c0	41	HASH	cart_btf	4	40	16	partial	ORPHANED (dead)
+0x9fa9e7a3d180	0	HASH		4	4	128	traversed	freed
+0x9faa442a0400	58	HASH	hide_rules	4	36	16	traversed	ORPHANED x5 (live)
+0x9faa444ea000	54	PERCPU_HASH	cart_pcpu	4	8	16	traversed	in idr
+0x9faa444eac00	52	HASH	cart_hash	4	8	16	traversed	in idr
+0x9faa444eb000	53	LRU_HASH	cart_lru	4	8	64	traversed	in idr
+0x9faa444ef400	57	HASH	cart_btf	4	40	16	traversed	ORPHANED (live)
+0x9faa51deec00	63	LRU_PERCPU_HASH	cart_lru_pcpu	4	8	16	traversed	in idr
+0x9faa55440ef8	67	ARRAY	mem_ebp.kconfig	4	9	1	traversed	dup of live
+0x9faa5eedb080	63	LRU_PERCPU_HASH	cart_lru_pcpu	4	8	16	traversed	dup of live
+0x9faa6b849378	67	ARRAY	mem_ebp.kconfig	4	9	1	traversed	dup of live
+0x9faa7539c500	63	LRU_PERCPU_HASH	cart_lru_pcpu	4	8	16	traversed	dup of live
+0x9faa7738c880	58	HASH	hide_rules	4	36	16	traversed	ORPHANED x5 (live)
+0x9faa81189000	55	HASH	cart_hash_np	6	12	8	traversed	in idr
+0x9faa8118b000	56	HASH	cart_empty	4	4	8	traversed	in idr
+0x9faa81521400	51	ARRAY	cart_arr	4	8	4	traversed	in idr
+0x9faa8161cd00	0	HASH		4	4	128	traversed	freed
+0x9faa88b50980	63	LRU_PERCPU_HASH	cart_lru_pcpu	4	8	16	traversed	dup of live
+0x9faa8ad36378	48	ARRAY	read_mem_array_	4	2097156	1	traversed	ORPHANED x2 (dead)
+0x9faa97623938	40	ARRAY	mem_ebp.kconfig	4	9	1	traversed	ORPHANED x3 (dead)
+0x9faa9b265480	55	HASH	cart_hash_np	6	12	8	traversed	dup of live
+0x9faa9b267480	56	HASH	cart_empty	4	4	8	traversed	dup of live
+0x9faa9d48d880	51	ARRAY	cart_arr	4	8	4	traversed	dup of live
+0x9faaa2c54378	50	ARRAY	mem_ebp.kconfig	4	9	1	traversed	ORPHANED x3 (dead)
+0x9faabc51ae00	63	LRU_PERCPU_HASH	cart_lru_pcpu	4	8	16	traversed	dup of live
+0x9faac0ce6900	55	HASH	cart_hash_np	6	12	8	traversed	dup of live
+0x9faac0ce8900	56	HASH	cart_empty	4	4	8	traversed	dup of live
+0x9faac311f000	0	HASH		4	4	128	traversed	freed
+0x9faad06a8280	63	LRU_PERCPU_HASH	cart_lru_pcpu	4	8	16	traversed	dup of live
+0x9faaed2c3ef8	65	ARRAY	read_mem_array_	4	2097156	1	traversed	dup of live
+0x9faaff46ed00	51	ARRAY	cart_arr	4	8	4	traversed	dup of live
+0x9fab01a1bdb8	40	ARRAY	mem_ebp.kconfig	4	9	1	traversed	ORPHANED x3 (dead)
+0x9fab180e2d00	58	HASH	hide_rules	4	36	16	traversed	ORPHANED x5 (live)
+0x9fab1a731d80	55	HASH	cart_hash_np	6	12	8	traversed	dup of live
+0x9fab1a733d80	56	HASH	cart_empty	4	4	8	traversed	dup of live
+0x9fab23a727f8	48	ARRAY	read_mem_array_	4	2097156	1	traversed	ORPHANED x2 (dead)
+0x9fab26f59180	0	HASH		4	4	128	traversed	freed
+0x9fab34361378	65	ARRAY	read_mem_array_	4	2097156	1	traversed	dup of live
+0x9fab3be77700	63	LRU_PERCPU_HASH	cart_lru_pcpu	4	8	16	traversed	dup of live
+0x9fab3d47c600	0	HASH		4	4	128	traversed	freed
+0x9fab46875180	58	HASH	hide_rules	4	36	16	traversed	ORPHANED x5 (live)
+0x9fab4998c7f8	50	ARRAY	mem_ebp.kconfig	4	9	1	traversed	ORPHANED x3 (dead)
+0x9fab4cdec7f8	67	ARRAY	mem_ebp.kconfig	4	9	1	traversed	dup of live
+0x9fab4fcf4600	58	HASH	hide_rules	4	36	16	traversed	ORPHANED x5 (live)
+0x9fab5b92bc78	50	ARRAY	mem_ebp.kconfig	4	9	1	traversed	ORPHANED x3 (dead)
+0xad0e411a5ef8	67	ARRAY	mem_ebp.kconfig	4	9	1	traversed	in idr
+0xad0e515d9ef8	65	ARRAY	read_mem_array_	4	2097156	1	traversed	in idr
+
+### Run times
+01_maplist_raw: 11.69 s, 508884 KB peak memory
+01_maplist_csv: 10.66 s, 509296 KB peak memory
+02_maplist_decoded: 10.88 s, 508980 KB peak memory
+03_find_next: 13.04 s, 509296 KB peak memory
+03_maplist_corrupted: 13.62 s, 509020 KB peak memory
+04_unlink_hide: 12.99 s, 509068 KB peak memory
+04_unlink_cart: 10.97 s, 509284 KB peak memory
+04_maplist_unlinked: 13.76 s, 509016 KB peak memory
+04_maplist_unlinked_raw: 14.23 s, 508164 KB peak memory
+04_scanmaps: 97.03 s, 3674332 KB peak memory
+
+### BTF code vs upstream
+upstream btf.py: 169 lines; ours: 300 lines; lines added: 132; lines removed: 5

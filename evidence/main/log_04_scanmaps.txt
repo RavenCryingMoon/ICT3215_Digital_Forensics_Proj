@@ -1,0 +1,4 @@
+WARNING  volatility3.utility.map: map 0/cart_btf is incomplete (partial recovery)
+WARNING  volatility3.utility.map: map 0/cart_btf is incomplete (partial recovery)
+WARNING  volatility3.utility.map: map 41/cart_btf is incomplete (partial recovery)
+WARNING  volatility3.utility.map: map 41/cart_btf is incomplete (partial recovery)

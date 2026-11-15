@@ -1,0 +1,5 @@
+Volatility 3 Framework 2.5.2
+
+bucket	chained	elem_vaddr	next_file_offset	action
+
+0	no	0x9faa7e7a0f68	4268880872	wrote self-pointer into /home/kali/DF_proj/ev_copy.lime

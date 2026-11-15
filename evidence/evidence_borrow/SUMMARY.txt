@@ -1,0 +1,21 @@
+BTF borrowing test on final.lime (sha256 5731bdfe...6f151c7a)
+
+## Dead maps decoded with a borrowed BTF
+0x9fa98598b4f8	40	ARRAY	mem_ebp.kconfig	4	9	1	traversed	ORPHANED x3 (dead), BTF from id 67 (unverified)
+0x9fa9af7cb100	0	HASH	cart_btf	4	40	16	partial	freed, BTF from id 57 (unverified)
+0x9fa9bf8e59c0	41	HASH	cart_btf	4	40	16	partial	ORPHANED (dead), BTF from id 57 (unverified)
+0x9faa8ad36378	48	ARRAY	read_mem_array_	4	2097156	1	traversed	ORPHANED x2 (dead), BTF from id 65 (unverified)
+0x9faa97623938	40	ARRAY	mem_ebp.kconfig	4	9	1	traversed	ORPHANED x3 (dead), BTF from id 67 (unverified)
+0x9faaa2c54378	50	ARRAY	mem_ebp.kconfig	4	9	1	traversed	ORPHANED x3 (dead), BTF from id 67 (unverified)
+0x9fab01a1bdb8	40	ARRAY	mem_ebp.kconfig	4	9	1	traversed	ORPHANED x3 (dead), BTF from id 67 (unverified)
+0x9fab23a727f8	48	ARRAY	read_mem_array_	4	2097156	1	traversed	ORPHANED x2 (dead), BTF from id 65 (unverified)
+0x9fab4998c7f8	50	ARRAY	mem_ebp.kconfig	4	9	1	traversed	ORPHANED x3 (dead), BTF from id 67 (unverified)
+0x9fab5b92bc78	50	ARRAY	mem_ebp.kconfig	4	9	1	traversed	ORPHANED x3 (dead), BTF from id 67 (unverified)
+
+## Old cart_btf (id 41) decoded with the BTF of map 57:
+{"1396824936": "{pid: 1389104808, comm: [aa 9f ff ff 00 00 00 00 00 00 00 00 00 00 00 00], count: 13, kind: 515708678}", "3866267647": "{pid: 3866275839, comm: [5f 7f 00 00 ff cf 72 e6 5f 7f 00 00 ff ff 72 e6], count: 140049864929279, kind: 3866398719}", "0": "{pid: 0, comm: \"\", count: 4294967295, kind: 1090379776}"}
+
+## What cart_btf_loader planted (keys 39050000 = 1337, 92100000 = 4242):
+TRUTH map=cart_btf id=57 key=39050000 value=39050000636172746f6772617068657200000000000000002a000000000000000200000000000000
+TRUTH map=cart_btf id=57 key=92100000 value=921000006576696c0000000000000000000000000000000007000000000000000300000000000000
+PLANTED-OK

@@ -1,0 +1,9 @@
+  ID  NAME             EXPECTED MATCHED  RESULT
+  51  cart_arr                1       1  PASS
+  52  cart_hash              10      10  PASS
+  53  cart_lru                3       3  PASS
+  54  cart_pcpu               2       2  PASS
+  55  cart_hash_np            2       2  PASS
+  56  cart_empty        (empty)       -  PASS
+
+ALL PLANTED MAPS RECOVERED

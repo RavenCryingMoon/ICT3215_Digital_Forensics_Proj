@@ -1,0 +1,15 @@
+Volatility 3 Framework 2.5.2
+
+OFFSET (V)	ID	TYPE	NAME	KEY SIZE	VALUE SIZE	MAX ENTRIES	STATUS	SOURCE
+
+0x9faa8175ec00	11	HASH_OF_MAPS	cgroup_hash	8	4	2048	unsupported	idr+prog
+0x9faa81521400	51	ARRAY	cart_arr	4	8	4	traversed	idr
+0x9faa444eac00	52	HASH	cart_hash	4	8	16	traversed	idr
+0x9faa444eb000	53	LRU_HASH	cart_lru	4	8	64	traversed	idr
+0x9faa444ea000	54	PERCPU_HASH	cart_pcpu	4	8	16	traversed	idr
+0x9faa81189000	55	HASH	cart_hash_np	6	12	8	traversed	idr
+0x9faa8118b000	56	HASH	cart_empty	4	4	8	traversed	idr
+0x9faa51deec00	63	LRU_PERCPU_HASH	cart_lru_pcpu	4	8	16	traversed	idr
+0xad0e515d9ef8	65	ARRAY	read_mem_array_	4	2097156	1	traversed	idr+prog
+0xad0e411a5ef8	67	ARRAY	mem_ebp.kconfig	4	9	1	traversed	idr
+0x9faa442a0400	58	HASH	hide_rules	4	36	16	traversed	prog

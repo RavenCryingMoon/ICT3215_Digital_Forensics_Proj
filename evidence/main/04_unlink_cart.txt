@@ -1,0 +1,5 @@
+Volatility 3 Framework 2.5.2
+
+map	slot_vaddr	slot_file_offset	action
+
+0x9faa444ef400	0x9faa4e8b31d8	3464697432	zeroed map_idr slot in /home/kali/DF_proj/ev_copy.lime

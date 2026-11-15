@@ -1,0 +1,5 @@
+Volatility 3 Framework 2.5.2
+
+MAP	BUCKETS	ENTRIES	EMPTY BUCKETS	BUCKETS WITH 2+	LONGEST CHAIN	BUCKETS BY CHAIN LENGTH	WALK PROBLEMS
+
+0x9faa51def400	64	64	25	16	4	0 entries: 25, 1 entry: 23, 2 entries: 10, 3 entries: 3, 4 entries: 3	0

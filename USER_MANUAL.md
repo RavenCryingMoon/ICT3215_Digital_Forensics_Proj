@@ -97,6 +97,14 @@ diagnostics.
 
 The scanner adds a SCAN column that classifies each find; see section 6.
 
+`--borrow-btf` (optional, off by default) decodes dead maps whose own BTF is
+gone, using the BTF of a live map with the same name, map type, key and value
+sizes and type numbers. The SCAN label then ends in `BTF from id N
+(unverified)` and the dump file name ends in `_btf<N>`. Treat these decodings
+with caution: in testing, a freed map's header outlived its data, and the
+entries it led to were memory the kernel had reused, so the decoded records
+looked real but were not the original contents.
+
 
 ## 6. Reading the output
 
@@ -181,6 +189,12 @@ listing, byte checks, corruption test, unlink test and scanner on that image,
 and writes every result, with run times and peak memory, to `evidence/`, starting
 with `evidence/SUMMARY.txt`.
 
+The hash-collision test runs separately: run `plant_collide` (64 keys in a
+64-bucket map), capture an image while it runs, then run `collect_collide.sh`.
+It checks all 64 entries byte-for-byte and uses the `chain_stats` plugin to count
+how many entries sit in each bucket, read directly from the image without the
+recovery code.
+
 
 ## 9. Test fixtures
 
@@ -195,6 +209,9 @@ of an image or on output files and are not part of the recovery tool.
   maps with known contents and record ground truth. Together they plant nine
   maps: array, hash, hash without preallocation, an empty hash, LRU, per-CPU,
   LRU per-CPU, and two BTF-typed hash maps (one used by a program).
+- `plant_collide` — a 64-key hash map in 64 buckets, so keys share buckets.
+- `chain_stats.ChainStats` — counts entries per bucket of one hash map, as an
+  independent check that collisions occurred.
 
 
 ## 10. Limitations

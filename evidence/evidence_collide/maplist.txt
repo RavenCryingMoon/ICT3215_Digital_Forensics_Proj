@@ -1,0 +1,8 @@
+Volatility 3 Framework 2.5.2
+
+OFFSET (V)	ID	TYPE	NAME	KEY SIZE	VALUE SIZE	MAX ENTRIES	STATUS	SOURCE
+
+0x9faa8175ec00	11	HASH_OF_MAPS	cgroup_hash	8	4	2048	unsupported	idr+prog
+0x9faa51def400	68	HASH	cart_collide	4	8	64	traversed	idr
+0xad0e53ba9ef8	70	ARRAY	read_mem_array_	4	2097156	1	traversed	idr+prog
+0xad0e40323ef8	72	ARRAY	mem_ebp.kconfig	4	9	1	traversed	idr

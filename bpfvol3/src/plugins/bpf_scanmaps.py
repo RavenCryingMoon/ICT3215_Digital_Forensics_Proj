@@ -22,11 +22,25 @@
 # A recently freed map can still pass as (live), so read (live) as strong
 # evidence rather than proof. Maps without BTF get no marker.
 #
+# Borrowed BTF: a dead map's own BTF is usually gone, but its header still
+# records its name, sizes and type numbers. If a map whose BTF still reads has
+# the same name, map type, key and value sizes and type numbers, it came from
+# the same program, so its BTF is used to decode the dead map. The SCAN label
+# then ends in ", BTF from id N" and the dump file name ends in _btf<N>, so a
+# borrowed decoding is never mistaken for the map's own. Unnamed maps never
+# borrow: a name is required to make the match.
+#
+# Borrowing is OFF unless --borrow-btf is given. In testing, a freed map's
+# header outlived its data: the chain walk led into memory the kernel had
+# reused, and borrowed field names made that garbage look like real records.
+# Treat borrowed decodings as unverified.
+#
 # This is an isolated, opt-in plugin; it cannot affect the core plugins. It
 # emits [scanmaps] diagnostics on stderr so the pipeline can be inspected.
 #
 # Place in: volatility3/framework/plugins/linux/bpf_scanmaps.py
 # Run:      vol.py -s ../symbols -f ../image.lime -o ../out linux.bpf_scanmaps.ScanMaps --dump
+#           add --borrow-btf to decode dead maps with a matching live map's BTF
 
 import logging
 import struct
@@ -46,12 +60,13 @@ class ScanMaps(plugins.PluginInterface):
     maps even when unlinked from map_idr and used by no program."""
 
     _required_framework_version = (2, 0, 0)
-    _version = (0, 0, 7)
+    _version = (0, 0, 8)
 
     OPS_SYMBOLS = (
         "htab_map_ops",
         "htab_lru_map_ops",
         "htab_percpu_map_ops",
+        "htab_lru_percpu_map_ops",
         "array_map_ops",
     )
 
@@ -66,6 +81,13 @@ class ScanMaps(plugins.PluginInterface):
             requirements.BooleanRequirement(
                 name="dump",
                 description="If set, recovered map contents are written to a file.",
+                optional=True,
+                default=False,
+            ),
+            requirements.BooleanRequirement(
+                name="borrow_btf",
+                description="Decode dead maps with the BTF of a matching live map "
+                "(same name, type, sizes and type ids). Results are unverified.",
                 optional=True,
                 default=False,
             ),
@@ -101,7 +123,7 @@ class ScanMaps(plugins.PluginInterface):
             pass
         return addrs, keys
 
-    def _label(self, map_virt, bm, reg_addrs, reg_keys, sightings):
+    def _label(self, map_virt, bm, reg_addrs, reg_keys, sightings, alive):
         """How this hit relates to the registry (see the table at the top)."""
         key = (int(bm.map.id), bm.name)
         if map_virt in reg_addrs:
@@ -113,7 +135,6 @@ class ScanMaps(plugins.PluginInterface):
         label = "ORPHANED"
         if sightings[key] > 1:
             label += f" x{sightings[key]}"
-        alive = self._btf_alive(bm)
         if alive is True:
             label += " (live)"
         elif alive is False:
@@ -142,16 +163,43 @@ class ScanMaps(plugins.PluginInterface):
             return False
         try:
             if key_id:
-                size = min(int(bm.map.key_size), 4096)
+                size = min(int(bm.map.key_size), 1 << 22)
                 bm.btf.sprintf_bytes(b"\x00" * size, key_id)
             if value_id:
-                size = min(int(bm.map.value_size), 4096)
+                size = min(int(bm.map.value_size), 1 << 22)
                 bm.btf.sprintf_bytes(b"\x00" * size, value_id)
         except Exception:
             return False
         return True
 
-    def _dump(self, map_virt, bm):
+    @staticmethod
+    def _match_key(bm):
+        """What two maps must share for one to lend its BTF to the other."""
+        return (
+            bm.name,
+            str(bm.type),
+            int(bm.map.key_size),
+            int(bm.map.value_size),
+            bm.btf_key_type_id,
+            bm.btf_value_type_id,
+        )
+
+    def _borrow_btf(self, bm, donors):
+        """Give a map whose own BTF is unreadable the BTF of a matching map.
+        Returns the donor's id, or None when there is no safe match."""
+        if not bm.name:
+            return None
+        donor = donors.get(self._match_key(bm))
+        if donor is None:
+            return None
+        own = bm.btf
+        bm.btf = donor.btf
+        if self._btf_alive(bm) is True:      # the donor's types fit this map
+            return int(donor.map.id)
+        bm.btf = own
+        return None
+
+    def _dump(self, map_virt, bm, suffix=""):
         """Write the map's contents: decoded when its BTF is readable, raw
         bytes otherwise (a freed map's BTF is often already unmapped)."""
         try:
@@ -165,7 +213,7 @@ class ScanMaps(plugins.PluginInterface):
             except Exception:
                 return
         try:
-            with self.open(f"scan_{hex(map_virt)}_{bm.map.id}") as f:
+            with self.open(f"scan_{hex(map_virt)}_{bm.map.id}{suffix}") as f:
                 f.write(text.encode("UTF-8"))
         except Exception:
             pass
@@ -173,6 +221,7 @@ class ScanMaps(plugins.PluginInterface):
     def _generator(self):
         vmlinux = self.context.modules[self.config["kernel"]]
         dump = bool(self.config.get("dump"))
+        borrow = bool(self.config.get("borrow_btf"))
         layer = self.context.layers[vmlinux.layer_name]  # kernel virtual layer
 
         ops_off = vmlinux.get_type("bpf_map").vol.members["ops"][0]
@@ -228,10 +277,24 @@ class ScanMaps(plugins.PluginInterface):
             key = (int(bm.map.id), bm.name)
             sightings[key] = sightings.get(key, 0) + 1
 
+        # Whose BTF still reads, and which of those can lend it (registered first).
+        alive = {map_virt: self._btf_alive(bm) for map_virt, bm in found}
+        donors = {}
+        for map_virt, bm in sorted(found, key=lambda f: f[0] not in reg_addrs):
+            if alive[map_virt] is True and bm.name:
+                donors.setdefault(self._match_key(bm), bm)
+
         for map_virt, bm in found:
-            label = self._label(map_virt, bm, reg_addrs, reg_keys, sightings)
+            label = self._label(map_virt, bm, reg_addrs, reg_keys, sightings, alive[map_virt])
+            suffix = ""
+            if borrow and alive[map_virt] is False:
+                donor_id = self._borrow_btf(bm, donors)
+                if donor_id is not None:
+                    label += f", BTF from id {donor_id} (unverified)"
+                    suffix = f"_btf{donor_id}"
+                    vollog.debug(f"[scanmaps] map {bm.label}: decoding with BTF of map {donor_id}")
             if dump:
-                self._dump(map_virt, bm)
+                self._dump(map_virt, bm, suffix)
             yield (0, (*bm.row(), label))
 
     def run(self):

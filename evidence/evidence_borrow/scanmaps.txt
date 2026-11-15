@@ -1,0 +1,54 @@
+Volatility 3 Framework 2.5.2
+
+OFFSET (V)	ID	TYPE	NAME	KEY SIZE	VALUE SIZE	MAX ENTRIES	STATUS	SCAN
+
+0x9fa98598b4f8	40	ARRAY	mem_ebp.kconfig	4	9	1	traversed	ORPHANED x3 (dead), BTF from id 67 (unverified)
+0x9fa9a4b83bc0	0	HASH		4	4	128	traversed	freed
+0x9fa9af7cb100	0	HASH	cart_btf	4	40	16	partial	freed, BTF from id 57 (unverified)
+0x9fa9bf8e59c0	41	HASH	cart_btf	4	40	16	partial	ORPHANED (dead), BTF from id 57 (unverified)
+0x9fa9e7a3d180	0	HASH		4	4	128	traversed	freed
+0x9faa442a0400	58	HASH	hide_rules	4	36	16	traversed	in idr
+0x9faa444ea000	54	PERCPU_HASH	cart_pcpu	4	8	16	traversed	in idr
+0x9faa444eac00	52	HASH	cart_hash	4	8	16	traversed	in idr
+0x9faa444eb000	53	LRU_HASH	cart_lru	4	8	64	traversed	in idr
+0x9faa444ef400	57	HASH	cart_btf	4	40	16	traversed	in idr
+0x9faa51deec00	63	LRU_PERCPU_HASH	cart_lru_pcpu	4	8	16	traversed	in idr
+0x9faa55440ef8	67	ARRAY	mem_ebp.kconfig	4	9	1	traversed	dup of live
+0x9faa5eedb080	63	LRU_PERCPU_HASH	cart_lru_pcpu	4	8	16	traversed	dup of live
+0x9faa6b849378	67	ARRAY	mem_ebp.kconfig	4	9	1	traversed	dup of live
+0x9faa7539c500	63	LRU_PERCPU_HASH	cart_lru_pcpu	4	8	16	traversed	dup of live
+0x9faa7738c880	58	HASH	hide_rules	4	36	16	traversed	dup of live
+0x9faa81189000	55	HASH	cart_hash_np	6	12	8	traversed	in idr
+0x9faa8118b000	56	HASH	cart_empty	4	4	8	traversed	in idr
+0x9faa81521400	51	ARRAY	cart_arr	4	8	4	traversed	in idr
+0x9faa8161cd00	0	HASH		4	4	128	traversed	freed
+0x9faa88b50980	63	LRU_PERCPU_HASH	cart_lru_pcpu	4	8	16	traversed	dup of live
+0x9faa8ad36378	48	ARRAY	read_mem_array_	4	2097156	1	traversed	ORPHANED x2 (dead), BTF from id 65 (unverified)
+0x9faa97623938	40	ARRAY	mem_ebp.kconfig	4	9	1	traversed	ORPHANED x3 (dead), BTF from id 67 (unverified)
+0x9faa9b265480	55	HASH	cart_hash_np	6	12	8	traversed	dup of live
+0x9faa9b267480	56	HASH	cart_empty	4	4	8	traversed	dup of live
+0x9faa9d48d880	51	ARRAY	cart_arr	4	8	4	traversed	dup of live
+0x9faaa2c54378	50	ARRAY	mem_ebp.kconfig	4	9	1	traversed	ORPHANED x3 (dead), BTF from id 67 (unverified)
+0x9faabc51ae00	63	LRU_PERCPU_HASH	cart_lru_pcpu	4	8	16	traversed	dup of live
+0x9faac0ce6900	55	HASH	cart_hash_np	6	12	8	traversed	dup of live
+0x9faac0ce8900	56	HASH	cart_empty	4	4	8	traversed	dup of live
+0x9faac311f000	0	HASH		4	4	128	traversed	freed
+0x9faad06a8280	63	LRU_PERCPU_HASH	cart_lru_pcpu	4	8	16	traversed	dup of live
+0x9faaed2c3ef8	65	ARRAY	read_mem_array_	4	2097156	1	traversed	dup of live
+0x9faaff46ed00	51	ARRAY	cart_arr	4	8	4	traversed	dup of live
+0x9fab01a1bdb8	40	ARRAY	mem_ebp.kconfig	4	9	1	traversed	ORPHANED x3 (dead), BTF from id 67 (unverified)
+0x9fab180e2d00	58	HASH	hide_rules	4	36	16	traversed	dup of live
+0x9fab1a731d80	55	HASH	cart_hash_np	6	12	8	traversed	dup of live
+0x9fab1a733d80	56	HASH	cart_empty	4	4	8	traversed	dup of live
+0x9fab23a727f8	48	ARRAY	read_mem_array_	4	2097156	1	traversed	ORPHANED x2 (dead), BTF from id 65 (unverified)
+0x9fab26f59180	0	HASH		4	4	128	traversed	freed
+0x9fab34361378	65	ARRAY	read_mem_array_	4	2097156	1	traversed	dup of live
+0x9fab3be77700	63	LRU_PERCPU_HASH	cart_lru_pcpu	4	8	16	traversed	dup of live
+0x9fab3d47c600	0	HASH		4	4	128	traversed	freed
+0x9fab46875180	58	HASH	hide_rules	4	36	16	traversed	dup of live
+0x9fab4998c7f8	50	ARRAY	mem_ebp.kconfig	4	9	1	traversed	ORPHANED x3 (dead), BTF from id 67 (unverified)
+0x9fab4cdec7f8	67	ARRAY	mem_ebp.kconfig	4	9	1	traversed	dup of live
+0x9fab4fcf4600	58	HASH	hide_rules	4	36	16	traversed	dup of live
+0x9fab5b92bc78	50	ARRAY	mem_ebp.kconfig	4	9	1	traversed	ORPHANED x3 (dead), BTF from id 67 (unverified)
+0xad0e411a5ef8	67	ARRAY	mem_ebp.kconfig	4	9	1	traversed	in idr
+0xad0e515d9ef8	65	ARRAY	read_mem_array_	4	2097156	1	traversed	in idr

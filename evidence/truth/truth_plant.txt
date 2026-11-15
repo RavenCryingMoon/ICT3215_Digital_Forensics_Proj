@@ -1,0 +1,20 @@
+TRUTH map=cart_arr id=51 key=01000000 value=1122334455667788
+TRUTH map=cart_hash id=52 key=39050000 value=4341525447523000
+TRUTH map=cart_hash id=52 key=92100000 value=4341525447523100
+TRUTH map=cart_hash id=52 key=697a0000 value=4341525447523200
+TRUTH map=cart_hash id=52 key=07000000 value=4341525447523300
+TRUTH map=cart_hash id=52 key=ffff0000 value=4341525447523400
+TRUTH map=cart_hash id=52 key=64000000 value=4341525447523500
+TRUTH map=cart_hash id=52 key=65000000 value=4341525447523600
+TRUTH map=cart_hash id=52 key=66000000 value=4341525447523700
+TRUTH map=cart_hash id=52 key=67000000 value=4341525447523800
+TRUTH map=cart_hash id=52 key=68000000 value=4341525447523900
+TRUTH map=cart_lru id=53 key=0b000000 value=4c52554d41503000
+TRUTH map=cart_lru id=53 key=16000000 value=4c52554d41503100
+TRUTH map=cart_lru id=53 key=21000000 value=4c52554d41503200
+TRUTH map=cart_pcpu id=54 key=e8030000 value=504350554d415030
+TRUTH map=cart_pcpu id=54 key=d0070000 value=504350554d415031
+TRUTH map=cart_hash_np id=55 key=736563726574 value=68696464656e2e7478740000
+TRUTH map=cart_hash_np id=55 key=706964003905 value=deadbeef0102030405060708
+TRUTH map=cart_empty id=56 (empty)
+PLANTED-OK

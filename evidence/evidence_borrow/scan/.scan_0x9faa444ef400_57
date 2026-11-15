@@ -1,0 +1,1 @@
+{"1337": "{pid: 1337, comm: \"cartographer\", count: 42, kind: EVT_EXEC}", "4242": "{pid: 4242, comm: \"evil\", count: 7, kind: EVT_HIDE}"}

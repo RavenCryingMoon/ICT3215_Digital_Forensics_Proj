@@ -1,0 +1,9 @@
+date:            2026-11-14T17:05:59-05:00
+kernel:          6.12.38+kali-amd64
+possible CPUs:   0-31   <- check against the 128 per-CPU slots
+nproc --all:     32
+volatility3 git: 18e5d7a7f2e2a85d0178307dd502e2729488e93a
+BPFVol3 git:     4123d3f74cbe407876eca5cb78500fd0046a435a
+python:          Python 3.13.7
+image:           /home/kali/DF_proj/final.lime (8.0G)
+image sha256:    5731bdfe58cd66b9cb1a1483e10197bf8701f7c7c3d6982e4a946a3d6f151c7a

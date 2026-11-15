@@ -1,0 +1,10 @@
+01_maplist_raw: 11.69 s, 508884 KB peak memory
+01_maplist_csv: 10.66 s, 509296 KB peak memory
+02_maplist_decoded: 10.88 s, 508980 KB peak memory
+03_find_next: 13.04 s, 509296 KB peak memory
+03_maplist_corrupted: 13.62 s, 509020 KB peak memory
+04_unlink_hide: 12.99 s, 509068 KB peak memory
+04_unlink_cart: 10.97 s, 509284 KB peak memory
+04_maplist_unlinked: 13.76 s, 509016 KB peak memory
+04_maplist_unlinked_raw: 14.23 s, 508164 KB peak memory
+04_scanmaps: 97.03 s, 3674332 KB peak memory

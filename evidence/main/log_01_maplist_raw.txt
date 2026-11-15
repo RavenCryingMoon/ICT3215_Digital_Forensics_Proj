@@ -1,0 +1,12 @@
+/home/kali/DF_proj/vol3-pinned/volatility3/framework/interfaces/plugins.py:63: SyntaxWarning: invalid escape sequence '\{'
+  allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.- ()[]\{\}!$%^:#~?<>,|"
+/home/kali/DF_proj/vol3-pinned/volatility3/framework/plugins/windows/mftscan.py:41: SyntaxWarning: invalid escape sequence '\*'
+  {"yara_rules": "/FILE0|FILE\*|BAAD/"}
+/home/kali/DF_proj/vol3-pinned/volatility3/framework/plugins/windows/mftscan.py:202: SyntaxWarning: invalid escape sequence '\*'
+  {"yara_rules": "/FILE0|FILE\*|BAAD/"}
+/home/kali/DF_proj/vol3-pinned/volatility3/framework/symbols/linux/extensions/__init__.py:1045: SyntaxWarning: invalid escape sequence '\*'
+  a 'vfsmount \*' (<3.3.8) or a 'vfsmount' (>=3.3.8). This way we trust
+/home/kali/DF_proj/vol3-pinned/volatility3/framework/plugins/linux/sockstat.py:86: SyntaxWarning: invalid escape sequence '\*'
+  sock: The respective kernel's \*_sock object for that socket family
+/home/kali/DF_proj/vol3-pinned/volatility3/framework/plugins/linux/sockstat.py:504: SyntaxWarning: invalid escape sequence '\*'
+  sock_fields: A tuple with the \*_sock object, the sock stats and the extended info dictionary

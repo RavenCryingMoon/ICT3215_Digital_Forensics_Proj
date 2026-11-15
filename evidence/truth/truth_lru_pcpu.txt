@@ -1,0 +1,4 @@
+TRUTH map=cart_lru_pcpu id=63 key=2a000000 value=4c52555043505530
+TRUTH map=cart_lru_pcpu id=63 key=63000000 value=4c52555043505531
+TRUTH map=cart_lru_pcpu id=63 key=00040000 value=4c52555043505532
+PLANTED-OK
